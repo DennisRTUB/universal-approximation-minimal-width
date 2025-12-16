@@ -177,33 +177,33 @@ class EncoderExact1D(nn.Module):
         
         
 class EncoderApprox1D(torch.nn.Module):
-    def __init__(self, K, beta, flat_slope=1e-6, dtype=torch.float64, device="cpu"):
+    def __init__(self, K, gamma, flat_slope=1e-6, dtype=torch.float64, device="cpu"):
         super().__init__()
         assert K >= 1, "K must be greater than 1"
-        assert beta > 0, "beta must be positive"
+        assert gamma > 0, "gamma must be positive"
         assert flat_slope > 0, "flat_slope must be positive"
         self.K = K
         self.dtype = dtype
         self.device = device
         self.num_levels = 2 ** K
-        self.beta = beta
+        self.gamma = gamma
         self.flat_slope = flat_slope
         self.base_slice = 2.0 ** (-K)
-        assert beta < self.base_slice, "beta must be less than 2^(-K)"
+        assert gamma < self.base_slice, "gamma must be less than 2^(-K)"
 
-        self.flat_slice = self.base_slice - beta
-        self.steep_slice = beta
+        self.flat_slice = self.base_slice - gamma
+        self.steep_slice = gamma
         self.binary_positions = [i * self.base_slice for i in range(self.num_levels)]
         self.flat_slice_base_value = self.flat_slope * self.flat_slice
 
-        self.steep_slope = (self.base_slice - self.flat_slice_base_value) / beta
+        self.steep_slope = (self.base_slice - self.flat_slice_base_value) / gamma
         self.steep_slope_relative_to_flat = self.steep_slope / self.flat_slope
         self.flat_slope_relative_to_steep = self.flat_slope / self.steep_slope
         if self.steep_slope_relative_to_flat <= 1.0:
             if self.steep_slope_relative_to_flat < 0.0:
-                raise ValueError("Negative steep slope relative to flat slope encountered,  which possibly indicates an overflow. Try increasing flat_slope or beta K.")
+                raise ValueError("Negative steep slope relative to flat slope encountered,  which possibly indicates an overflow. Try increasing flat_slope or gamma K.")
             else:
-                raise ValueError("steep_slope must be greater than flat_slope. Try decreasing flat_slope or beta.")
+                raise ValueError("steep_slope must be greater than flat_slope. Try decreasing flat_slope or gamma.")
 
         self.sigmas = [Sigma_ab_cd(a=self.flat_slope, b=self.steep_slope, c=self.flat_slice, d=self.flat_slice_base_value, dtype=dtype, device=device)]
         self.binary_positions_tensor = torch.tensor(self.binary_positions, dtype=dtype, device=device)
@@ -212,7 +212,7 @@ class EncoderApprox1D(torch.nn.Module):
             c_flat = self.binary_positions[i]
             d_flat = self.binary_positions[i]
             sigma_flat = Sigma_ab_cd(a=1.0, b=self.flat_slope_relative_to_steep, c=c_flat, d=d_flat, dtype=dtype, device=device)
-            #c_steep = self.binary_positions[i] - self.beta
+            #c_steep = self.binary_positions[i] - self.gamma
             c_steep = self.binary_positions[i] + self.flat_slice_base_value
             d_steep = self.binary_positions[i] + self.flat_slice_base_value
             sigma_steep = Sigma_ab_cd(a=1.0, b=self.steep_slope_relative_to_flat, c=c_steep, d=d_steep, dtype=dtype, device=device)
@@ -222,7 +222,7 @@ class EncoderApprox1D(torch.nn.Module):
 
     def forward(self, x):
         for i in range(len(self.sigmas)):
-            #shift_down_offset = self.binary_positions_tensor[i // 2] - self.beta if i % 2 == 0 else self.binary_positions_tensor[i // 2]
+            #shift_down_offset = self.binary_positions_tensor[i // 2] - self.gamma if i % 2 == 0 else self.binary_positions_tensor[i // 2]
             x = self.sigmas[i](x)
         return x
 
@@ -243,7 +243,7 @@ class EncoderApprox1D(torch.nn.Module):
         plt.xlabel('x', fontsize=12)
         plt.ylabel('y', fontsize=12)
         if show_title:
-            plt.title(f'Quantizer Approximation with K={self.K}, flat_slope={self.flat_slope:.2e}, beta={self.beta:.2e} and steep_slope={self.steep_slope:.2e}', fontsize=14)
+            plt.title(f'Quantizer Approximation with K={self.K}, flat_slope={self.flat_slope:.2e}, gamma={self.gamma:.2e} and steep_slope={self.steep_slope:.2e}', fontsize=14)
         plt.axhline(y=0, color='k', linewidth=0.5)
         plt.axvline(x=0, color='k', linewidth=0.5)
         if save_path is not None:
@@ -307,7 +307,7 @@ class EncoderApprox1D(torch.nn.Module):
         plt.xlabel('x', fontsize=12)
         plt.ylabel('y', fontsize=12)
         if show_title:
-            plt.title(f'Exact vs Approximate Quantizer (K={self.K}, flat_slope={self.flat_slope:.2e}, beta={self.beta:.2e})\n'
+            plt.title(f'Exact vs Approximate Quantizer (K={self.K}, flat_slope={self.flat_slope:.2e}, gamma={self.gamma:.2e})\n'
                      f'MSE: {mse_error:.2e}, Max Error: {max_error:.2e}', fontsize=14)
         plt.legend(fontsize=11)
         plt.axhline(y=0, color='k', linewidth=0.5)
@@ -582,8 +582,6 @@ class PLCSMMemorizer(nn.Module):
             def forward(self,x):
                 return -x
         self.plcsm_decreasing_list.append(Negate()) 
-        print(f"self.plcsm_increasing_list: {self.plcsm_increasing_list}")
-        print(f"self.plcsm_decreasing_list: {self.plcsm_decreasing_list}")
 
 
     def forward(self, x):
@@ -748,6 +746,50 @@ class PLCSMMemorizer(nn.Module):
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path, bbox_inches='tight')
         plt.show()
+    
+    def plot_for_parameter_list(self, param_list, points=None, dpi=100):
+        """
+        Plot PLCSM memorizer outputs for multiple parameter combinations.
+        
+        Args:
+            param_list: List of tuples (K, M, flat_slope) specifying parameter combinations
+            points: Optional points for plotting
+            dpi: DPI for the plots
+        """
+        for K, M, flat_slope in param_list:
+            # Create new memorizer with these parameters
+            memorizer = PLCSMMemorizer(
+                self.base_function,
+                discontinuities=self.discontinuities,
+                flat_slope=flat_slope,
+                K=K,
+                M=M,
+                dtype=self.dtype,
+                device=self.device
+            )
+            memorizer.plot(points=points, dpi=dpi)
+    
+    def plot_with_base_function_for_parameter_list(self, param_list, points=None, dpi=100):
+        """
+        Plot PLCSM memorizer outputs compared to base function for multiple parameter combinations.
+        
+        Args:
+            param_list: List of tuples (K, M, flat_slope) specifying parameter combinations
+            points: Optional points for plotting
+            dpi: DPI for the plots
+        """
+        for K, M, flat_slope in param_list:
+            # Create new memorizer with these parameters
+            memorizer = PLCSMMemorizer(
+                self.base_function,
+                discontinuities=self.discontinuities,
+                flat_slope=flat_slope,
+                K=K,
+                M=M,
+                dtype=self.dtype,
+                device=self.device
+            )
+            memorizer.plot_with_base_function(points=points, dpi=dpi)
 
 # given a set of points [x_0,...,x_{n-1}] in [0,1] and values [y_0,...,y_{n-1}]=[f(x_0),...,f(x_{n-1})] in [0,1] for some function f,
 # constructs a piecewise linear zig zag function h such that h(x_i) = y_i for all i
@@ -1014,6 +1056,48 @@ class ZigZagMemorizer:
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path, bbox_inches='tight')
         plt.show()
+    
+    def plot_for_parameter_list(self, param_list, plot_points=None, dpi=100):
+        """
+        Plot ZigZag memorizer outputs for multiple parameter combinations.
+        
+        Args:
+            param_list: List of tuples (K, M) specifying parameter combinations
+            plot_points: Optional points for plotting
+            dpi: DPI for the plots
+        """
+        for K, M in param_list:
+            # Create new memorizer with these parameters
+            memorizer = ZigZagMemorizer(
+                self.base_function,
+                K=K,
+                M=M,
+                discontinuities=self.discontinuities,
+                dtype=self.dtype,
+                device=self.device
+            )
+            memorizer.plot(plot_points=plot_points, dpi=dpi)
+    
+    def plot_with_base_function_for_parameter_list(self, param_list, plot_points=None, dpi=100):
+        """
+        Plot ZigZag memorizer outputs compared to base function for multiple parameter combinations.
+        
+        Args:
+            param_list: List of tuples (K, M) specifying parameter combinations
+            plot_points: Optional points for plotting
+            dpi: DPI for the plots
+        """
+        for K, M in param_list:
+            # Create new memorizer with these parameters
+            memorizer = ZigZagMemorizer(
+                self.base_function,
+                K=K,
+                M=M,
+                discontinuities=self.discontinuities,
+                dtype=self.dtype,
+                device=self.device
+            )
+            memorizer.plot_with_base_function(plot_points=plot_points, dpi=dpi)
 
 
 class ZigZagFunctionSup(ZigZagMemorizer):
@@ -1045,7 +1129,7 @@ class ZigZagFunctionSup(ZigZagMemorizer):
         self.validation_tol = 1e-5
 
 class CodingScheme1D:
-    def __init__(self, function, discontinuities=None, K=2, M=2, beta=0.1, flat_slope=1e-2, 
+    def __init__(self, function, discontinuities=None, K=2, M=2, gamma=0.1, flat_slope=1e-2, 
                  memorizer_type="zig-zag", scheme_type="lp", dtype=torch.float64, device="cpu"):
         """
         Initialize a 1D Coding Scheme.
@@ -1084,23 +1168,23 @@ class CodingScheme1D:
             
         self.dtype = dtype
         self.device = device
-        self.setup_classes_for_parameters(K, M, beta, flat_slope)
+        self.setup_classes_for_parameters(K, M, gamma, flat_slope)
 
-    def setup_classes_for_parameters(self, K, M, beta, flat_slope):
+    def setup_classes_for_parameters(self, K, M, gamma, flat_slope):
         assert K >= 1, "K must be greater than 1"
         assert M >= 1, "M must be greater than 1"
-        assert beta > 0, "beta must be positive"
+        assert gamma > 0, "gamma must be positive"
         assert flat_slope > 0, "flat_slope must be positive"
         self.K = K
         self.M = M
-        self.beta = beta
+        self.gamma = gamma
         self.flat_slope = flat_slope
         
         # Setup encoder based on scheme_type
         if self.scheme_type == "sup":
             self.encoder = EncoderSupApprox1D(K=K, slope=flat_slope, dtype=self.dtype, device=self.device)
         else:  # scheme_type == "lp"
-            self.encoder = EncoderApprox1D(K=K, beta=beta, flat_slope=flat_slope, dtype=self.dtype, device=self.device)
+            self.encoder = EncoderApprox1D(K=K, gamma=gamma, flat_slope=flat_slope, dtype=self.dtype, device=self.device)
         
         # Create sample points for memorizer setup
         sample_points = torch.linspace(0, 1, 2**K + 1, dtype=self.dtype, device=self.device)
@@ -1132,7 +1216,7 @@ class CodingScheme1D:
 
     def print_errors(self, function_repr_str, points=None, p=2):
         lp_error, max_error = self.approximate_Lp_and_max_error(points, p)
-        print(f"For {function_repr_str} with parameters K={self.K}, M={self.M}, beta={self.beta:.2e}, flat_slope={self.flat_slope:.2e}:\n - L{p} error: {lp_error:.2e}, Max error: {max_error:.2e}")
+        print(f"For {function_repr_str} with parameters K={self.K}, M={self.M}, gamma={self.gamma:.2e}, flat_slope={self.flat_slope:.2e}:\n - L{p} error: {lp_error:.2e}, Max error: {max_error:.2e}")
 
 
     def plot(self, points=None, dpi=100, show_title=True, save_path=None):
@@ -1151,7 +1235,7 @@ class CodingScheme1D:
         plt.xlabel('x', fontsize=12)
         plt.ylabel('y', fontsize=12)
         if show_title:
-            plt.title(f'Coding Scheme Output (K={self.K}, M={self.M}, beta={self.beta:.2e}, flat_slope={self.flat_slope:.2e})', fontsize=14)
+            plt.title(f'Coding Scheme Output (K={self.K}, M={self.M}, gamma={self.gamma:.2e}, flat_slope={self.flat_slope:.2e})', fontsize=14)
         plt.axhline(y=0, color='k', linewidth=0.5)
         plt.axvline(x=0, color='k', linewidth=0.5)
         if save_path is not None:
@@ -1220,7 +1304,7 @@ class CodingScheme1D:
         plt.xlabel('x', fontsize=12)
         plt.ylabel('y', fontsize=12)
         
-        title = f'Coding Scheme vs Base Function (K={self.K}, M={self.M}, beta={self.beta:.2e}, flat_slope={self.flat_slope:.2e})\n'
+        title = f'Coding Scheme vs Base Function (K={self.K}, M={self.M}, gamma={self.gamma:.2e}, flat_slope={self.flat_slope:.2e})\n'
         title += f'MSE: {mse_error:.2e}, Max Error: {max_error:.2e}'
         if self.discontinuities is not None and len(self.discontinuities) > 0:
             title += f' | Discontinuities: {len(self.discontinuities)}'
@@ -1239,43 +1323,43 @@ class CodingScheme1D:
     def evaluate_for_list_of_parameters(self, parameter_list, function_repr_str, points=None, plot=False, p=2):
         results = []
         for params in parameter_list:
-            K, M, beta, flat_slope = params
+            K, M, gamma, flat_slope = params
             try:
-                self.setup_classes_for_parameters(K, M, beta, flat_slope)
+                self.setup_classes_for_parameters(K, M, gamma, flat_slope)
                 if plot:
                     self.plot_with_base_function(points)
                 lp_error, max_error = self.approximate_Lp_and_max_error(points, p)
-                results.append((K, M, beta, flat_slope, lp_error, max_error))
+                results.append((K, M, gamma, flat_slope, lp_error, max_error))
                 self.print_errors(function_repr_str, p=p)
             except Exception as e:
                 print(f"Error occurred for parameters {params}: {e}\nSkipping this set of parameters.")
                 results.append(None)
         return results
 
-    def plot_Lp_and_max_norms_for_betas(self, betas, p=2, points=None, dpi=100, show_title=True, save_path=None):
-        assert isinstance(betas, torch.Tensor), f"betas must be a torch.Tensor, but was of type {type(betas)}"
+    def plot_Lp_and_max_norms_for_gammas(self, gammas, p=2, points=None, dpi=100, show_title=True, save_path=None):
+        assert isinstance(gammas, torch.Tensor), f"gammas must be a torch.Tensor, but was of type {type(gammas)}"
         
         if points is None:
             points = torch.linspace(0, 1, 10000, dtype=self.dtype, device=self.device)
         
         # Store original parameters to restore later
-        original_beta = self.beta
+        original_gamma = self.gamma
         original_dtype = self.dtype
         
         # Data storage for plotting
-        betas_list = betas.cpu().numpy()
+        gammas_list = gammas.cpu().numpy()
         lp_errors_float32 = []
         max_errors_float32 = []
         lp_errors_float64 = []
         max_errors_float64 = []
         
         # Test with torch.float32
-        for beta in betas:
-            beta_val = beta.item()
+        for gamma in gammas:
+            gamma_val = gamma.item()
             try:
                 # Setup with float32
                 self.dtype = torch.float32
-                self.setup_classes_for_parameters(self.K, self.M, beta_val, self.flat_slope)
+                self.setup_classes_for_parameters(self.K, self.M, gamma_val, self.flat_slope)
                 
                 # Convert points to float32
                 points_float32 = points.to(torch.float32)
@@ -1283,17 +1367,17 @@ class CodingScheme1D:
                 lp_errors_float32.append(lp_error)
                 max_errors_float32.append(max_error)
             except Exception as e:
-                print(f"Error with beta={beta_val} and float32: {e}")
+                print(f"Error with gamma={gamma_val} and float32: {e}")
                 lp_errors_float32.append(float('nan'))
                 max_errors_float32.append(float('nan'))
         
         # Test with torch.float64
-        for beta in betas:
-            beta_val = beta.item()
+        for gamma in gammas:
+            gamma_val = gamma.item()
             try:
                 # Setup with float64
                 self.dtype = torch.float64
-                self.setup_classes_for_parameters(self.K, self.M, beta_val, self.flat_slope)
+                self.setup_classes_for_parameters(self.K, self.M, gamma_val, self.flat_slope)
                 
                 # Convert points to float64
                 points_float64 = points.to(torch.float64)
@@ -1301,29 +1385,29 @@ class CodingScheme1D:
                 lp_errors_float64.append(lp_error)
                 max_errors_float64.append(max_error)
             except Exception as e:
-                print(f"Error with beta={beta_val} and float64: {e}")
+                print(f"Error with gamma={gamma_val} and float64: {e}")
                 lp_errors_float64.append(float('nan'))
                 max_errors_float64.append(float('nan'))
         
-        # Create the plot with betas on x-axis and errors on y-axis
+        # Create the plot with gammas on x-axis and errors on y-axis
         plt.figure(figsize=(14, 8), dpi=dpi)
         
         # Plot L_p errors for both dtypes
-        plt.plot(betas_list, lp_errors_float32, 'b-o', linewidth=2, markersize=6, 
+        plt.plot(gammas_list, lp_errors_float32, 'b-o', linewidth=2, markersize=6, 
                 label=f'L{p} Error (torch.float32)', alpha=0.8)
-        plt.plot(betas_list, lp_errors_float64, 'b--s', linewidth=2, markersize=6, 
+        plt.plot(gammas_list, lp_errors_float64, 'b--s', linewidth=2, markersize=6, 
                 label=f'L{p} Error (torch.float64)', alpha=0.8)
         
         # Plot Max errors for both dtypes  
-        plt.plot(betas_list, max_errors_float32, 'r-o', linewidth=2, markersize=6, 
+        plt.plot(gammas_list, max_errors_float32, 'r-o', linewidth=2, markersize=6, 
                 label='Max Error (torch.float32)', alpha=0.8)
-        plt.plot(betas_list, max_errors_float64, 'r--s', linewidth=2, markersize=6, 
+        plt.plot(gammas_list, max_errors_float64, 'r--s', linewidth=2, markersize=6, 
                 label='Max Error (torch.float64)', alpha=0.8)
         
-        plt.xlabel('Beta', fontsize=12)
+        plt.xlabel('Gamma', fontsize=12)
         plt.ylabel('Error', fontsize=12)
         if show_title:
-            plt.title(f'L{p} and Max Errors vs Beta (K={self.K}, M={self.M}, flat_slope={self.flat_slope:.2e})', fontsize=14)
+            plt.title(f'L{p} and Max Errors vs Gamma (K={self.K}, M={self.M}, flat_slope={self.flat_slope:.2e})', fontsize=14)
         plt.legend(fontsize=11)
         plt.grid(True, alpha=0.3)
         plt.yscale('log')  # Use log scale for better visualization of errors
@@ -1335,11 +1419,11 @@ class CodingScheme1D:
         
         # Restore original parameters
         self.dtype = original_dtype
-        self.setup_classes_for_parameters(self.K, self.M, original_beta, self.flat_slope)
+        self.setup_classes_for_parameters(self.K, self.M, original_gamma, self.flat_slope)
         
         # Return the data for further analysis if needed
         return {
-            'betas': betas_list,
+            'gammas': gammas_list,
             'lp_errors_float32': lp_errors_float32,
             'max_errors_float32': max_errors_float32,
             'lp_errors_float64': lp_errors_float64,
