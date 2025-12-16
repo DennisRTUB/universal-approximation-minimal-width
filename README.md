@@ -6,7 +6,12 @@ This repository contains code implementations accompanying an **unpublished pape
 
 ## Getting Started
 
-**We recommend starting with the [Coding_Scheme_1D](./Coding_Scheme_1D/) folder** to build intuition about the coding scheme approach, its components (encoder, memorizer, decoder), and how it approximates different functions in one dimension.
+This repository presents two complementary approaches:
+
+- **Interested in the coding scheme and its visualization?** → Start with [Coding_Scheme_1D](./Coding_Scheme_1D/) (read the [README](./Coding_Scheme_1D/README.md) inside for detailed usage instructions)
+- **Interested in LU-Net implementation and experiments?** → Start with [LU-Net](./LU-Net/)
+
+Both folders are self-contained and can be explored independently based on your research interests.
 
 ## Repository Structure
 
@@ -57,8 +62,8 @@ See the LU-Net README for detailed documentation on training and usage.
 
 ```bash
 # Clone the repository
-git clone [repository-url]
-cd New-advances-in-universal-approximation-with-neural-networks-of-minimal-width
+git clone https://github.com/DennisRTUB/universal-approximation-minimal-width.git
+cd universal-approximation-minimal-width
 
 # Install dependencies
 pip install torch matplotlib
@@ -66,28 +71,46 @@ pip install torch matplotlib
 # Navigate to specific folders for additional requirements
 ```
 
-## Workflow
+## Usage
 
-1. **Build Intuition**: Start with [Coding_Scheme_1D](./Coding_Scheme_1D/) notebooks to understand the theoretical foundations
-2. **Explore Applications**: Move to [LU-Net](./LU-Net/) for practical implementations and experiments
+Both implementations are independent and serve different purposes:
+
+- **[Coding_Scheme_1D](./Coding_Scheme_1D/)**: Explore theoretical foundations through interactive visualizations
+- **[LU-Net](./LU-Net/)**: Train and experiment with normalizing flows for practical applications
 
 ## Citation
 
-This work is currently unpublished. If you use this code in your research, please contact the authors for the appropriate citation.
+This code corresponds to the following **unpublished paper**:
 
 ```bibtex
 @unpublished{rochau2024new,
   title={New Advances in Universal Approximation with Neural Networks of Minimal Width},
-  author={[Authors]},
+  author={Rochau, Dennis and Chan, Robin and Gottschalk, Hanno},
   note={Unpublished manuscript},
   year={2024}
 }
 ```
 
-## License
+Until the new paper is published, please cite the related arXiv preprint:
 
-[Add your license information here]
+```bibtex
+@article{rochau2024universal,
+  title={Universal approximation with neural networks of minimal width},
+  author={Rochau, Dennis and Chan, Robin and Gottschalk, Hanno},
+  journal={arXiv preprint arXiv:2411.08735},
+  year={2024},
+  url={https://arxiv.org/abs/2411.08735}
+}
+```
+
+**Note**: The arXiv paper (https://arxiv.org/abs/2411.08735) represents an older version of this work. Please check back for updates when the new paper is published.
 
 ## Authors
 
-[Add author information here]
+- **Dennis Rochau**
+- **Robin Chan**
+- **Hanno Gottschalk**
+
+## License
+
+[Add your license information here]

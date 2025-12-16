@@ -22,8 +22,10 @@ The coding scheme provides a constructive approach to universal approximation us
 
 ### Notebooks
 
-- **`coding_scheme_1D.ipynb`**: Main notebook demonstrating $L^p$ norm approximation with continuous activations (LReLUs and G-ReLUs)
-- **`coding_scheme_1D_sup.ipynb`**: Supremum norm approximation using discontinuous activations (SG-LReLUs and S-ReLUs)
+**📖 Recommended starting point**: Begin with **`coding_scheme_1D.ipynb`** as it includes more detailed explanations of the $\sigma_{a,b,c,d}$ functions and introduces foundational concepts. However, both notebooks are equally important:
+
+- **`coding_scheme_1D.ipynb`**: $L^p$ norm approximation with continuous activations (LReLUs and G-ReLUs). Provides detailed introduction to sigma functions and basic concepts.
+- **`coding_scheme_1D_sup.ipynb`**: Supremum norm approximation using discontinuous activations (SG-LReLUs and S-ReLUs). Equally important (or more so) for understanding the full scope of the approach, but assumes familiarity with basics from the first notebook.
 
 ### Python Modules
 
@@ -186,24 +188,40 @@ zig_zag_memorizer.plot_with_base_function_for_parameter_list(zigzag_param_list)
 
 ## Citation
 
-If you use this code in your research, please cite:
+This code corresponds to the following **unpublished paper**:
 
 ```bibtex
-@article{rochau2024new,
+@unpublished{rochau2024new,
   title={New Advances in Universal Approximation with Neural Networks of Minimal Width},
-  author={[Authors]},
-  journal={[Journal]},
+  author={Rochau, Dennis and Chan, Robin and Gottschalk, Hanno},
+  note={Unpublished manuscript},
   year={2024}
 }
 ```
 
-## License
+Until the new paper is published, please cite the related arXiv preprint:
 
-[Add your license information here]
+```bibtex
+@article{rochau2024universal,
+  title={Universal approximation with neural networks of minimal width},
+  author={Rochau, Dennis and Chan, Robin and Gottschalk, Hanno},
+  journal={arXiv preprint arXiv:2411.08735},
+  year={2024},
+  url={https://arxiv.org/abs/2411.08735}
+}
+```
+
+**Note**: The arXiv paper represents an older version of this work.
 
 ## Authors
 
-[Add author information here]
+- **Dennis Rochau**
+- **Robin Chan**
+- **Hanno Gottschalk**
+
+## License
+
+[Add your license information here]
 
 ## Version History
 
