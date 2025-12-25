@@ -80,18 +80,7 @@ Both implementations are independent and serve different purposes:
 
 ## Citation
 
-This code corresponds to the following **unpublished paper**:
-
-```bibtex
-@unpublished{rochau2024new,
-  title={New Advances in Universal Approximation with Neural Networks of Minimal Width},
-  author={Rochau, Dennis and Chan, Robin and Gottschalk, Hanno},
-  note={Unpublished manuscript},
-  year={2024}
-}
-```
-
-Until the new paper is published, please cite the related arXiv preprint:
+This repository corresponds to the arXiv preprint:
 
 ```bibtex
 @article{rochau2024universal,
@@ -103,7 +92,7 @@ Until the new paper is published, please cite the related arXiv preprint:
 }
 ```
 
-**Note**: The arXiv paper (https://arxiv.org/abs/2411.08735) represents an older version of this work. Please check back for updates when the new paper is published.
+**Note**: This repository provides code implementations and visualizations based on the theoretical concepts presented in the arXiv paper https://arxiv.org/abs/2411.08735 (starting from version 3, December 2025). The code primarily visualizes the abstract mathematical concepts and constructions to give readers a clearer understanding, and connects these visualizations to the theoretical foundations presented in the paper.
 
 ## Authors
 
@@ -113,4 +102,24 @@ Until the new paper is published, please cite the related arXiv preprint:
 
 ## License
 
-[Add your license information here]
+MIT License
+
+Copyright (c) 2024 Dennis Rochau, Robin Chan, Hanno Gottschalk
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
