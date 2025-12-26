@@ -26,7 +26,7 @@ This folder provides visualizations and explanations to help understand:
 - Parameter convergence behavior and practical limitations
 - **Critical network width distinction**: Zig-zag is width-1, PLCSM is width-2
 
-**Key insight**: All constructions are built purely from $\sigma_{a,b,c,d}$ functions (width-1 LReLU compositions) - nothing else! The zig-zag memorizer achieves universal approximation with **minimal width-1 networks**, while PLCSM uses width-2 for smoother results.
+**Key insight**: All constructions are built purely from $\sigma_{a,b}^{c,d}$ functions (width-1 LReLU compositions) - nothing else! The zig-zag memorizer achieves universal approximation with **minimal width-1 networks**, while PLCSM uses width-2 for smoother results.
 
 **Contents**:
 - `coding_scheme_1D.ipynb`: $L^p$ norm approximation with continuous activations

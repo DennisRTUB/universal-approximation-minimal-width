@@ -11,7 +11,7 @@ The coding scheme provides a constructive approach to universal approximation us
 
 ### Network Width - A Critical Distinction
 
-**All constructions are built purely from $\sigma_{a,b,c,d}$ functions - simple width-1 LReLU compositions!**
+**All constructions are built purely from $\sigma_{a,b}^{c,d}$ functions - simple width-1 LReLU compositions!**
 
 - **Zig-Zag Memorizer = Width-1 FNN**: Complete coding scheme is width-1
 - **PLCSM Memorizer = Width-2 FNN**: Complete coding scheme is width-2
@@ -22,7 +22,7 @@ The coding scheme provides a constructive approach to universal approximation us
 
 ### Notebooks
 
-**📖 Recommended starting point**: Begin with **`coding_scheme_1D.ipynb`** as it includes more detailed explanations of the $\sigma_{a,b,c,d}$ functions and introduces foundational concepts. However, both notebooks are equally important:
+**📖 Recommended starting point**: Begin with **`coding_scheme_1D.ipynb`** as it includes more detailed explanations of the $\sigma_{a,b}^{c,d}$ functions and introduces foundational concepts. However, both notebooks are equally important:
 
 - **`coding_scheme_1D.ipynb`**: $L^p$ norm approximation with continuous activations (LReLUs and G-ReLUs). Provides detailed introduction to sigma functions and basic concepts.
 - **`coding_scheme_1D_sup.ipynb`**: Supremum norm approximation using discontinuous activations (SG-LReLUs and S-ReLUs). Equally important (or more so) for understanding the full scope of the approach, but assumes familiarity with basics from the first notebook.
